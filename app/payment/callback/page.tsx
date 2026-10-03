@@ -5,7 +5,8 @@ import { supabase } from '@/lib/supabase'
 
 export default function PaymentCallback() {
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading')
-  const [message, setMessage] = useState('')
+    const [message, setMessage] = useState('')
+    const [emailSent, setEmailSent] = useState(true)
   const ran = useRef(false)
 
   useEffect(() => {
@@ -33,7 +34,8 @@ export default function PaymentCallback() {
       const json = await res.json()
 
       if (res.ok) {
-        window.dispatchEvent(new Event('cart-updated')) // resets the navbar badge
+          window.dispatchEvent(new Event('cart-updated')) // resets the navbar badge
+          setEmailSent(json.emailSent !== false)
         setStatus('success')
       } else {
         setStatus('failed')
@@ -49,15 +51,19 @@ export default function PaymentCallback() {
         {status === 'loading' && <p className="text-stone-600">Confirming your payment...</p>}
 
         {status === 'success' && (
-          <>
-            <div className="text-6xl">🎉</div>
-            <h1 className="text-2xl font-bold text-rose-700 mt-3">Payment successful!</h1>
-            <p className="text-stone-600 mt-2">Your receipt is on its way to your email.</p>
-            <Link href="/" className="inline-block mt-6 bg-rose-600 text-white px-5 py-2 rounded-full">
-              Continue shopping
-            </Link>
-          </>
-        )}
+  <>
+    <div className="text-6xl">🎉</div>
+    <h1 className="text-2xl font-bold text-rose-700 mt-3">Payment successful!</h1>
+    <p className="text-stone-600 mt-2">
+      {emailSent
+        ? 'Your receipt is on its way to your email.'
+        : "Your payment went through, but we couldn't send the receipt email."}
+    </p>
+    <Link href="/" className="inline-block mt-6 bg-rose-600 text-white px-5 py-2 rounded-full">
+      Continue shopping
+    </Link>
+  </>
+)}
 
         {status === 'failed' && (
           <>
