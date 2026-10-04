@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   const items = cart.map((c: any) => ({
-    name: c.products.name,
+    name: c.products.name as string,
     emoji: c.products.emoji as string,
     price: Number(c.products.price),
     quantity: c.quantity as number,
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   )
   await supabaseAdmin.from('cart_items').delete().eq('user_id', user.id)
 
-  // 4. Send the receipt email
+  // 4. Send both emails (customer confirmation + owner notification)
   const mailData = {
     to: user.email!,
     customerName: user.user_metadata?.full_name || user.email!.split('@')[0],
