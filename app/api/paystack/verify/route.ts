@@ -3,6 +3,10 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { getUser } from '@/lib/getUser'
 import { sendReceiptEmail, sendOwnerEmail } from '@/lib/email'
 
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 })
+}
+
 export async function POST(req: NextRequest) {
   const user = await getUser(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { getUser } from '@/lib/getUser'
 
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 })
+}
+
 export async function POST(req: NextRequest) {
   const user = await getUser(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -14,6 +18,15 @@ export async function POST(req: NextRequest) {
 
   const total = cart.reduce((s, c: any) => s + c.quantity * Number(c.products.price), 0)
 
+  // Where Paystack sends the user after paying (website, or the Expo app on localhost)
+  const origin = new URL(req.url).origin
+  const body = await req.json().catch(() => ({}))
+  const requested = typeof body.callback_url === 'string' ? body.callback_url : ''
+  const callback_url =
+    requested.startsWith(origin) || requested.startsWith('http://localhost')
+      ? requested
+      : `${origin}/payment/callback`
+
   const res = await fetch('https://api.paystack.co/transaction/initialize', {
     method: 'POST',
     headers: {
@@ -22,9 +35,9 @@ export async function POST(req: NextRequest) {
     },
     body: JSON.stringify({
       email: user.email,
-      amount: Math.round(total * 100), // Paystack uses kobo
+      amount: Math.round(total * 100),
       currency: 'NGN',
-      callback_url: `${new URL(req.url).origin}/payment/callback`,
+      callback_url,
       metadata: { user_id: user.id },
     }),
   })
